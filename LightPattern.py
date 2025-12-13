@@ -37,6 +37,10 @@ class LightPattern:
     def clear(self) -> None:
         self._lights.clear()
 
+    def display(self) -> None:
+        for light in self._lights:
+            print(f"{light.color}({light.count})")
+
     def __iter__(self) -> Iterator[Light]:
         return iter(self._lights)
 
@@ -56,3 +60,4 @@ class LightPattern:
                 if not _valid_rgb(l.color):
                     raise ValueError("color must be an RGB tuple (r, g, b) with 0-255 ints")
             return f"LightPattern({self._lights!r})"
+        
