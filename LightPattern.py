@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
-from typing import Tuple, Union
+from typing import Tuple, Union, List, Iterator, Optional
 
 RGB = Tuple[int, int, int]
+
 
 def _validate_rgb(value: Union[RGB, tuple, list]) -> RGB:
     if not (isinstance(value, (tuple, list)) and len(value) == 3 and all(isinstance(v, int) and 0 <= v <= 255 for v in value)):
         raise TypeError("color must be an RGB tuple (r, g, b) with 0-255 ints")
     return tuple(value)
-from typing import List, Iterator, Optional
 
 
 @dataclass
@@ -48,16 +48,19 @@ class LightPattern:
         return len(self._lights)
 
     def __repr__(self) -> str:
-        def __repr__(self) -> str:
-            def _valid_rgb(c):
-                return (
-                    isinstance(c, (tuple, list))
-                    and len(c) == 3
-                    and all(isinstance(v, int) and 0 <= v <= 255 for v in c)
-                )
+        def _valid_rgb(c):
+            return (
+                isinstance(c, (tuple, list))
+                and len(c) == 3
+                and all(isinstance(v, int) and 0 <= v <= 255 for v in c)
+            )
 
-            for l in self._lights:
-                if not _valid_rgb(l.color):
-                    raise ValueError("color must be an RGB tuple (r, g, b) with 0-255 ints")
-            return f"LightPattern({self._lights!r})"
-        
+        for l in self._lights:
+            if not _valid_rgb(l.color):
+                raise ValueError("color must be an RGB tuple (r, g, b) with 0-255 ints")
+        return f"LightPattern({self._lights!r})"
+
+
+# expose Light class as attribute for compatibility with code expecting
+# `LightPattern.Light` construction
+LightPattern.Light = Light

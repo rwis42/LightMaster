@@ -10,10 +10,10 @@ class ScheduledEvent:
     start_time: time
     end_date: date
     end_time: time
+    pattern: LightPattern = LightPattern()
     id: int = 0
     name: str = ""
     priority: int = 0
-    pattern: LightPattern
 
     def __post_init__(self) -> None:
         if self.end_datetime < self.start_datetime:
