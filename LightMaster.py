@@ -3,7 +3,10 @@ from ScheduledEvent import ScheduledEvent
 from LightPattern import LightPattern
 from datetime import datetime
 from time import sleep
-from typing import Optional
+from typing import Optional, List
+import sys
+import json
+from pathlib import Path
 
 
 def run_processing_loop(scheduler: EventScheduler) -> None:
@@ -19,6 +22,7 @@ def run_processing_loop(scheduler: EventScheduler) -> None:
             print(f"Active Event: {event.name} (Priority: {event.priority})")
             current_event = event
             event.pattern.display()
+            sleep(0.01)
         else:
             print("No active event.")
             sleep(5)
@@ -27,19 +31,48 @@ def run_processing_loop(scheduler: EventScheduler) -> None:
 if __name__ == "__main__":
     from datetime import timedelta
 
-    now = datetime.now()
-    e1 = ScheduledEvent.from_datetimes(now + timedelta(seconds=30), now + timedelta(seconds=40))
-    e1.pattern._lights.append(LightPattern.Light(color=(255, 0, 0), count=5))
-    e1.pattern._lights.append(LightPattern.Light(color=(0, 255, 0), count=3))    
-    e2 = ScheduledEvent.from_datetimes(now + timedelta(seconds=10), now + timedelta(seconds=50))
-    e2.pattern._lights.append(LightPattern.Light(color=(0, 0, 255), count=10))
-    e3 = ScheduledEvent.from_datetimes(now + timedelta(seconds=100), now + timedelta(seconds=150))
-    e3.pattern._lights.append(LightPattern.Light(color=(10, 10, 255), count=1))
+    def load_events_from_file(path: Path) -> List[ScheduledEvent]:
+        with path.open("r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        events: List[ScheduledEvent] = []
+        if isinstance(data, list):
+            for item in data:
+                # each item should be a dict compatible with ScheduledEvent.from_dict
+                try:
+                    ev = ScheduledEvent.from_dict(item)
+                    events.append(ev)
+                except Exception:
+                    continue
+        elif isinstance(data, dict):
+            # single event
+            try:
+                events.append(ScheduledEvent.from_dict(data))
+            except Exception:
+                pass
+        return events
 
     sched = EventScheduler()
-    sched.add_event(e1, priority=1)
-    sched.add_event(e2, priority=2)
-    sched.add_event(e3, priority=1)
+
+    # if JSON file provided as first arg, load events from it
+    if len(sys.argv) > 1:
+        p = Path(sys.argv[1])
+        if p.exists():
+            for ev in load_events_from_file(p):
+                sched.add_event(ev, priority=getattr(ev, "priority", 0))
+    # otherwise create a few sample events
+    if not any(True for _ in sched._events):
+        now = datetime.now()
+        e1 = ScheduledEvent.from_datetimes(now + timedelta(seconds=30), now + timedelta(seconds=40))
+        e1.pattern.add_light((255, 0, 0), 5)
+        e1.pattern.add_light((0, 255, 0), 3)
+        e2 = ScheduledEvent.from_datetimes(now + timedelta(seconds=10), now + timedelta(seconds=50))
+        e2.pattern.add_light((0, 0, 255), 10)
+        e3 = ScheduledEvent.from_datetimes(now + timedelta(seconds=100), now + timedelta(seconds=150))
+        e3.pattern.add_light((10, 10, 255), 1)
+
+        sched.add_event(e1, priority=1)
+        sched.add_event(e2, priority=2)
+        sched.add_event(e3, priority=1)
 
     exit_loop = False
     run_processing_loop(sched)

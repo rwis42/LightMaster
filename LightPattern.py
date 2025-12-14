@@ -21,15 +21,15 @@ class Light:
 
 
 class LightPattern:
-    """
-    Container for a list of lights. Each light has a color and a count.
-    """
-
     def __init__(self, lights: Optional[List[Light]] = None):
         self._lights: List[Light] = []
         if lights:
             for l in lights:
                 self.add_light(l.color, l.count)
+
+    def add_light(self, color: RGB, count: int = 1) -> "LightPattern":
+        self._lights.append(Light(color=color, count=count))
+        return self
 
     def as_list(self) -> List[Light]:
         return list(self._lights)
